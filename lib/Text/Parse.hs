@@ -48,4 +48,24 @@ alphanum = letter <|> digit
 
 word = plusOneLetter <|> result T.empty
     where
-        plusOneLetter = 
+        plusOneLetter = letter |- (\l ->
+                                word |- (\rest ->
+                                        result (T.cons l rest)))
+
+many :: Parser a -> Parser [a]
+many pA = oneStepFurther <|> result []
+    where
+        oneStepFurther = pA |- (\first ->
+                                many pA |- (\rest ->
+                                         result $ first : rest)) 
+
+text :: Text -> Parser Text
+text t = if t == T.empty
+         then result (T.empty)
+         else stepFurther
+    where
+        stepFurther = char (T.head t) |- (\first ->
+                            text (T.tail t) |- (\rest ->
+                                    result $ T.cons first rest))
+
+
