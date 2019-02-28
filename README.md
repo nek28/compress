@@ -4,7 +4,7 @@ The grammar that the parser recognizes is something like this:
 
     A -> charA
 
-    A -> number<(A)>A
+    A -> number<A>A
 
     A -> _
 
