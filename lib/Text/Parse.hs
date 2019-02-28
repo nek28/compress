@@ -3,6 +3,7 @@ module Text.Parse where
 
 import           Data.Text (Text)
 import qualified Data.Text as T
+import           Data.List
 
 newtype Parser a = Parser { parse :: Text -> [(a,Text)] }
 
@@ -76,6 +77,11 @@ manyText pC = oneCharFurther <|> result T.empty
                                 manyText pC |- (\rest ->
                                         result $ T.cons firstChar rest))
 
+manyText1 :: Parser Char -> Parser Text
+manyText1 pC = pC |- (\first ->
+                manyText pC |- (\rest ->
+                        result $ T.cons first rest))
+
 many :: Parser a -> Parser [a]
 many pA = oneStepFurther <|> result []
     where
@@ -83,10 +89,13 @@ many pA = oneStepFurther <|> result []
                                 many pA |- (\rest ->
                                          result $ first : rest)) 
 
+many1 :: Parser a -> Parser [a]
+many1 pA = pA |- (\first ->
+                many pA |- (\rest ->
+                        result $ first : rest))
+
 text :: Text -> Parser Text
-text t = if t == T.empty
-         then result (T.empty)
-         else stepFurther
+text t = stepFurther <|> result T.empty
     where
         stepFurther = char (T.head t) |- (\first ->
                             text (T.tail t) |- (\rest ->
@@ -96,3 +105,21 @@ sepby1 :: Parser a -> Parser b -> Parser [a]
 sepby1 pA pSep = pA |- (\first ->
                         many (pSep |- (\_ -> pA |- result)) |- (\rest ->
                                 result $ first : rest))
+
+chainl1 :: Parser a -> Parser (a -> a -> a) -> Parser a
+chainl1 factorP fuseP =
+            factorP |- (\firstFactor ->
+                    many (fuseP |- (\fuseFunction ->
+                                factorP |- (\factor ->
+                                        result (fuseFunction, factor)))) |- (\listOfFactors ->
+                                                result $ foldedFactors firstFactor listOfFactors))
+    where
+        foldedFactors base list = foldl' 
+                            (\partialValue (fuse, nextTerm) -> fuse partialValue nextTerm) base list
+
+brackets :: Parser a -> Parser b -> Parser c -> Parser b
+brackets leftBracket ps rightBracket = 
+                     leftBracket |- (\_ ->
+                            ps |- (\value ->
+                                    rightBracket |- (\_ ->
+                                            result value)))
