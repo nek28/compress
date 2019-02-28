@@ -2,5 +2,7 @@ I wanted to remain as close to the paper (which was written for Gofer) as possib
 
 The grammar that the parser recognizes is something like this:
     A -> \[char\]A
+
     A -> \[number\](A)
+
     A -> _
