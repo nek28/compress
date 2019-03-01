@@ -10,14 +10,13 @@ The grammar that the parser recognizes is something like this:
 
 Some examples, and how they'd be parsed:
 
-    abc3<def> --> abcdefdefdef
+    abc3<def> -> abcdefdefdef
 
     pq5<a2<b>>op -> pqabbabbabbabbabbop
 
     3<a4<b5<c>>> -> abbbbcccccabbbbcccccabbbbccccc
-    
-The embedding is deep (it parses it to a **Compressed** value, which splits the string into a list of normal strings and repeat blocks that can be nested). One transformation that could be done before expanding is to merge two repeat blocks together if one is immediately nested inside the other and nothing follows it. For example: 
 
-    3<2<kl>> ==> 6<kl> 
+The input string is parsed into a **Compressed** value, which is then passed through the **transform** function. It looks for repeat blocks that are nested in each other without any text before or after them, and fuses them together.
+
+    ...3<ab4<5<pq>>>... ==> ...3<ab20<pq>>...
     
-    2<2<3<xx>>> ==> 12<xx>

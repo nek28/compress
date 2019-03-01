@@ -31,14 +31,27 @@ repeatBlock = nat |- (\n ->
                 brackets (char '<') readCompr (char '>') |- (\compr ->
                         result $ Repeat n compr))
 
+--fuses together two or more repeat blocks that are nested inside each other
+--example: 2<3<4<xx>>> would become 24<xx>
+transform :: Compressed -> Compressed
+transform (Chain l) = Chain (trns' l)
+    where
+        trns' = foldr step []
+        step cfact ls =
+            case cfact of
+                TextFactor t -> cfact : ls
+                Repeat n nested -> case transform nested of
+                                    Chain ([Repeat m text]) -> (Repeat (n*m) text) : ls
+                                    anythingelse            -> (Repeat n anythingelse) : ls
+
 decompress :: Compressed -> Text
 decompress (Chain ls) = foldl' step T.empty ls
     where
         step :: Text -> CFactor -> Text
         step base factor = 
                 case factor of
-                    TextFactor t  -> T.append base t
-                    Repeat n nest -> T.append base (T.replicate n (decompress nest))
+                    TextFactor t  -> base <> t
+                    Repeat n nest -> base <> (T.replicate n (decompress nest))
 
 getResult :: Parser a -> Text -> a
 getResult pA inp = case parse pA inp of
@@ -49,6 +62,6 @@ main :: IO ()
 main = do
     str <- TIO.getLine
     let comprValue = getResult readCompr str
-    print comprValue
-    TIO.putStrLn $ "the result is: " <> decompress comprValue
+    print (transform comprValue)
+    TIO.putStrLn $ "the result is: " <> (decompress . transform) comprValue
     main
