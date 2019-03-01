@@ -5,8 +5,8 @@ name:                compress
 version:             0.1.0.0
 -- synopsis:
 -- description:
-license:             BSD3
-license-file:        LICENSE
+-- license:             
+-- license-file:        
 author:              Vladi Nekolov
 maintainer:          vladinekolov@gmail.com
 -- copyright:
