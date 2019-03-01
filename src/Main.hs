@@ -6,12 +6,6 @@ import qualified Data.Text.IO as TIO
 import Text.Parse
 import Data.List
 
-intlist :: Parser [Int]
-intlist = int `sepby1` text ", "
-
-manychars :: Parser Text
-manychars = manyText item
-
 ---------------------------------
 
 data CFactor = TextFactor Text
